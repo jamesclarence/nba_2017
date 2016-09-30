@@ -1,6 +1,7 @@
 # Find probabilities of a conference rank by point differential
 
 # libraries
+library(dplyr)
 library(ggplot2)
 
 # read in standings doc
@@ -43,11 +44,27 @@ pop_sd <- sd(x$pt_diff)*sqrt((length(x$pt_diff)-1)/(length(x$pt_diff)))
 pop_mean <- mean(x$pt_diff)
 
 # z-score: pnorm([number], pop_mean, pop_sd)
+# http://stats.seandolinar.com/calculating-z-scores-with-r/
+
 
 ## calculate z-score for standing based on conference rank
 c1 <- x %>% filter(conf_rank == 1)
 pop_sd1 <- sd(c1$pt_diff)*sqrt((length(c1$pt_diff)-1)/(length(c1$pt_diff)))
 pop_mean1 <- mean(c1$pt_diff)
+
+pnorm(0, pop_mean1, pop_sd1)
+
+c2 <- x %>% filter(conf_rank == 2)
+pop_sd2 <- sd(c2$pt_diff)*sqrt((length(c2$pt_diff)-2)/(length(c2$pt_diff)))
+pop_mean2 <- mean(c2$pt_diff)
+
+pnorm(0, pop_mean2, pop_sd2)
+
+# Create list of point diffs from -50.0:50.0
+seq(-50, 50, by = 0.1)
+
+# Find probability of each point differential and conf_rank combination
+# Choose the highest probability for each
 
 
 
