@@ -97,12 +97,13 @@ west <- mutate(west, pt_diff = tm_pts - op_pts)
 
 # Bind east and west conference; round pt_diff for matching
 standings <- rbind(east, west) %>% arrange(conf, conf_rank) %>% select(-gb, -srs)
-standings$pt_diff <- round(standings$pt_diff, 1)
+
+# Change columns to character for matching (floating point issue)
+standings$pt_diff <- as.character(round(standings$pt_diff, 1))
+prob$pt_seq <- as.character(round(prob$pt_seq, 1))
 
 # Add in pt_diff probability
-s <- standings %>%  left_join(prob, by = c("pt_diff" = "pt_seq")) %>% filter(conf_rank.x == conf_rank.y) %>% select(-pop_mean, -pop_sd, -zscore)
+s <- standings %>% left_join(prob, by = c("pt_diff" = "pt_seq")) %>% filter(conf_rank.x == conf_rank.y) %>% select(-pop_mean, -pop_sd, -zscore)
 
-# Why don't pt_diff of -0.9:0.9 match?
-standings %>%  anti_join(prob, by = c("pt_diff" = "pt_seq"))
-m_rank <- match(standings$conf_rank, prob$conf_rank)
-m_ptdiff <- match(standings$pt_diff, prob$pt_seq)
+# To JSON file
+toJSON(s, pretty = T)
