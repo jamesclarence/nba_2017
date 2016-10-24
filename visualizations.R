@@ -6,8 +6,8 @@ library(ggplot2)
 setwd("C:/Users/fishe/Documents/nba_2017")
 
 # Read in standings and probability docs
-x <- read.csv("nba_standings_1977_2016.csv", stringsAsFactors = F)
-y <- read.csv("probability.csv", stringsAsFactors = F)
+x <- read.csv("data/nba_standings_1977_2016.csv", stringsAsFactors = F)
+y <- read.csv("data/probability.csv", stringsAsFactors = F)
 
 x <- mutate(x, pt_diff = tm_pts - op_pts)
 
@@ -21,6 +21,10 @@ filter(df2, pt_diff == pt_seq)
 ### Visualizations of distribution
 # density of x by conference rank
 ggplot(x, aes(x = pt_diff, fill = as.factor(conf_rank))) +
+  geom_density(alpha=0.25) + theme_bw()
+
+filter(x, conf_rank == 1|conf_rank == 2|conf_rank == 3) %>% 
+  ggplot(aes(x = pt_diff, fill = as.factor(conf_rank))) +
   geom_density(alpha=0.25) + theme_bw()
 
 # scatter plot comparing conf_rank and pt_diff

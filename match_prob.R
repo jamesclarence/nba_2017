@@ -102,8 +102,30 @@ standings <- rbind(east, west) %>% arrange(conf, conf_rank) %>% select(-gb, -srs
 standings$pt_diff <- as.character(round(standings$pt_diff, 1))
 prob$pt_seq <- as.character(round(prob$pt_seq, 1))
 
-# Add in pt_diff probability
-s <- standings %>% left_join(prob, by = c("pt_diff" = "pt_seq")) %>% filter(conf_rank.x == conf_rank.y) %>% select(-pop_mean, -pop_sd, -zscore)
+# Join point differential with probability
+s <- standings %>% 
+  left_join(prob, by = c("pt_diff" = "pt_seq")) %>% 
+  filter(conf_rank.x == conf_rank.y) 
+
+# Turn prob into percentage format and reformat data frame
+s <- mutate(s, prob = str_c(round(prob*100, 1), "%")) %>%
+  select(conf, conf_rank.x, prob, team, w, l, `w/l%`, tm_pts, op_pts, pt_diff, -pop_mean, -pop_sd, -zscore, -conf_rank.y)
+
+# Rename columns
+s <- rename(s, 
+            Conf = conf,
+            Rank = conf_rank.x,
+            `Rank PCT` = prob,
+            Team = team,
+            W = w,
+            L = l,
+            PCT = `w/l%`,
+            PPG = tm_pts,
+            oPPG = op_pts,
+            Diff= pt_diff
+          )
 
 # To JSON file
-toJSON(s, pretty = T)
+data <- toJSON(s, pretty = T)
+
+write(data, "data.JSON")
