@@ -7,7 +7,7 @@ library(stringr)
 
 # read in standings doc
 setwd("C:/Users/fishe/Documents/nba_2017")
-x <- read.csv("nba_standings_1977_2016.csv", stringsAsFactors = F)
+x <- read.csv("data/nba_standings_1977_2016.csv", stringsAsFactors = F)
 
 # z-score: pnorm([number], pop_mean, pop_sd)
 # http://stats.seandolinar.com/calculating-z-scores-with-r/
@@ -31,7 +31,7 @@ colnames(df_y) <- c("playoff", "pt_seq", "pop_mean", "pop_sd")
 df_y <- df_y %>% mutate(zscore = (pt_seq - pop_mean / pop_sd))
 df_y$prob <- pnorm(df_y$pt_seq, df_y$pop_mean, df_y$pop_sd)
 
-df_y <- df_y %>% mutate(prob_pct = str_c(round(prob*100, 1), "%"))
+# df_y <- df_y %>% mutate(prob_pct = str_c(round(prob*100, 1), "%"))
 
 # Write the probabilities as a csv
 write.csv(df_y, "probability_playoff.csv", row.names = F)

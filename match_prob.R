@@ -11,7 +11,7 @@ library(readr)
 setwd("C:/Users/fishe/Documents/nba_2017")
 
 # Read in pt_diff probability
-prob <- read_csv("probability.csv")
+prob <- read_csv("data/probability_playoff.csv")
 
 # Read in standings from Basketball Reference
 url <- "http://www.basketball-reference.com/leagues/NBA_2016_standings.html" 
@@ -104,25 +104,26 @@ prob$pt_seq <- as.character(round(prob$pt_seq, 1))
 
 # Join point differential with probability
 s <- standings %>% 
-  left_join(prob, by = c("pt_diff" = "pt_seq")) %>% 
-  filter(conf_rank.x == conf_rank.y) 
+  left_join(prob, by = c("pt_diff" = "pt_seq"))
 
 # Turn prob into percentage format and reformat data frame
-s <- mutate(s, prob = str_c(round(prob*100, 1), "%")) %>%
-  select(conf, conf_rank.x, prob, team, w, l, `w/l%`, tm_pts, op_pts, pt_diff, -pop_mean, -pop_sd, -zscore, -conf_rank.y)
+s <- select(s,conf, conf_rank, team, w, l, `w/l%`, tm_pts, op_pts, pt_diff , prob_pct, -pop_mean, -pop_sd, -zscore)
+
+# Turn prob_pct into numeric
+s$prob_pct
 
 # Rename columns
 s <- rename(s, 
             Conf = conf,
-            Rank = conf_rank.x,
-            `Rank PCT` = prob,
+            Rank = conf_rank,
             Team = team,
             W = w,
             L = l,
             PCT = `w/l%`,
             PPG = tm_pts,
             oPPG = op_pts,
-            Diff= pt_diff
+            Diff= pt_diff,
+            `Playoff Chance` = prob_pct
           )
 
 # To JSON file
