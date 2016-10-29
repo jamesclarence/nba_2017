@@ -14,19 +14,19 @@ setwd("C:/Users/fishe/Documents/nba_2017")
 prob <- read_csv("data/probability_playoff.csv")
 
 # Read in standings from Basketball Reference
-url <- "http://www.basketball-reference.com/leagues/NBA_2016_standings.html" 
+url <- "http://www.basketball-reference.com/leagues/NBA_2017_standings.html" 
   
 url <- read_html(url)
 
 # Clean Eastern Conference
 # Get the standings table
-east <- html_table(html_nodes(url, "table"))[[3]]
+east <- html_table(html_nodes(url, "table"))[[1]]
 
 # lowercase column names
 names(east) <- tolower(names(east))
 
 # remove division rows
-east <- east[-grep("Division", east$`eastern conference`),]
+# east <- east[-grep("Division", east$`eastern conference`),]
  
 # convert tm_pts and op_pts to integers
 east$tm_pts <- as.numeric(east$`ps/g`)
@@ -40,7 +40,7 @@ east$`pa/g` <- NULL
 east <- rename(east, "team" = `eastern conference`)
 
 # add conference column; add "east" to it
-east$conf <- "east"
+east$conf <- "East"
 
 # remove asterisk from team column
 east$team <- str_replace_all(east$team, "\\*", "")
@@ -51,7 +51,6 @@ east$conf_rank <- str_replace_all(east$conf_rank, "[[:punct:]]|[[:space:]]", "")
 east$conf_rank <- as.integer(east$conf_rank)
 
 # remove conference rank from team column
-# east$team <- str_replace_all(east$team, "[[:punct:]]|[[:digit:]]", "") %>% str_trim
 east$team <- str_replace_all(east$team, "[[:punct:]][[:digit:]]{1,2}[[:punct:]]", "") %>% str_trim
 
 # calculate point differential
@@ -59,13 +58,10 @@ east <- mutate(east, pt_diff = tm_pts - op_pts)
 
 # Clean Western Conference
 # Get the standings table
-west <- html_table(html_nodes(url, "table"))[[4]]
+west <- html_table(html_nodes(url, "table"))[[2]]
 
 # lowercase column names
 names(west) <- tolower(names(west))
-
-# remove division rows
-west <- west[-grep("Division", west$`western conference`),]
 
 # convert tm_pts and op_pts to integers
 west$tm_pts <- as.numeric(west$`ps/g`)
@@ -79,7 +75,7 @@ west$`pa/g` <- NULL
 west <- rename(west, "team" = `western conference`)
 
 # add conference column; add "west" to it
-west$conf <- "west"
+west$conf <- "West"
 
 # remove asterisk from team column
 west$team <- str_replace_all(west$team, "\\*", "")
@@ -107,15 +103,16 @@ s <- standings %>%
   left_join(prob, by = c("pt_diff" = "pt_seq"))
 
 # Turn prob into percentage format and reformat data frame
-s <- select(s,conf, conf_rank, team, w, l, `w/l%`, tm_pts, op_pts, pt_diff , prob_pct, -pop_mean, -pop_sd, -zscore)
+s <- select(s, conf, conf_rank, team, w, l, `w/l%`, tm_pts, op_pts, pt_diff , prob, -pop_mean, -pop_sd, -zscore) %>%
+    arrange(desc(prob))
 
-# Turn prob_pct into numeric
-s$prob_pct
+# 
+s <-mutate(s, prob_pct = str_c(round(prob*100, 1), "%")) %>% select(-prob)
 
 # Rename columns
 s <- rename(s, 
-            Conf = conf,
-            Rank = conf_rank,
+            Conference = conf,
+            `Conference Rank` = conf_rank,
             Team = team,
             W = w,
             L = l,
@@ -127,6 +124,6 @@ s <- rename(s,
           )
 
 # To JSON file
-data <- toJSON(s, pretty = T)
+standings_playoff_pct <- toJSON(s, pretty = T)
 
-write(data, "data.JSON")
+write(standings_playoff_pct, "nba_playoff_pct.JSON")
