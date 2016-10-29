@@ -99,20 +99,20 @@ standings$pt_diff <- as.character(round(standings$pt_diff, 1))
 prob$pt_seq <- as.character(round(prob$pt_seq, 1))
 
 # Join point differential with probability
-s <- standings %>% 
+s1 <- standings %>% 
   left_join(prob, by = c("pt_diff" = "pt_seq"))
 
 # Turn prob into percentage format and reformat data frame
-s <- select(s, conf, conf_rank, team, w, l, `w/l%`, tm_pts, op_pts, pt_diff , prob, -pop_mean, -pop_sd, -zscore) %>%
+s2 <- select(s, conf, conf_rank, team, w, l, `w/l%`, tm_pts, op_pts, pt_diff , prob, -pop_mean, -pop_sd, -zscore) %>%
     arrange(desc(prob))
 
-# 
-s <-mutate(s, prob_pct = str_c(round(prob*100, 1), "%")) %>% select(-prob)
+# Turn probability into percentage format 
+s3 <- mutate(s, prob_pct = str_c(round(prob*100, 1), "%")) %>% select(-prob)
 
 # Rename columns
-s <- rename(s, 
-            Conference = conf,
-            `Conference Rank` = conf_rank,
+s4 <- rename(s, 
+            Conf = conf,
+            `Conf Rank` = conf_rank,
             Team = team,
             W = w,
             L = l,
@@ -120,7 +120,7 @@ s <- rename(s,
             PPG = tm_pts,
             oPPG = op_pts,
             Diff= pt_diff,
-            `Playoff Chance` = prob_pct
+            `Playoff Prob` = prob_pct
           )
 
 # To JSON file
