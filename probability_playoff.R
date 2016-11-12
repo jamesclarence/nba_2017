@@ -9,6 +9,15 @@ library(stringr)
 setwd("C:/Users/fishe/Documents/nba_2017")
 x <- read.csv("data/nba_standings_1977_2016.csv", stringsAsFactors = F)
 
+
+x2 <- x %>% group_by(ssn) %>% 
+  mutate(orank = min_rank(desc(tm_pts)), drank = min_rank(desc(op_pts))) %>% 
+  select(team, ssn, conf_rank, playoff, orank, drank)
+
+  ggplot(x2, aes(x = orank, y = drank, color = playoff)) + 
+    geom_point(size = 3) + 
+    geom_smooth(method = "lm")
+
 # z-score: pnorm([number], pop_mean, pop_sd)
 # http://stats.seandolinar.com/calculating-z-scores-with-r/
 

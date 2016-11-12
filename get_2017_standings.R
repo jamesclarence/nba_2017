@@ -1,11 +1,11 @@
-# Generate JSON file to update NBA standings and point differential
+# 2017 Season
 
 # load packages
 library(rvest)
 library(stringr)
-library(jsonlite)
 library(dplyr)
 library(readr)
+library(ggplot2)
 
 # Set working directory
 setwd("C:/Users/fishe/Documents/nba_2017")
@@ -15,7 +15,7 @@ prob <- read_csv("data/probability_playoff.csv")
 
 # Read in standings from Basketball Reference
 url <- "http://www.basketball-reference.com/leagues/NBA_2017_standings.html" 
-  
+
 url <- read_html(url)
 
 # Clean Eastern Conference
@@ -27,11 +27,11 @@ names(east) <- tolower(names(east))
 
 # remove division rows
 # east <- east[-grep("Division", east$`eastern conference`),]
- 
+
 # convert tm_pts and op_pts to integers
 east$tm_pts <- as.numeric(east$`ps/g`)
 east$op_pts <- as.numeric(east$`pa/g`)
- 
+
 # remove pts columns
 east$`ps/g` <- NULL
 east$`pa/g` <- NULL
@@ -94,46 +94,35 @@ west <- mutate(west, pt_diff = tm_pts - op_pts)
 # Bind east and west conference; round pt_diff for matching
 standings <- rbind(east, west) %>% arrange(conf, conf_rank) %>% select(-gb, -srs)
 
-# Change columns to character for matching (floating point issue)
-standings$pt_diff <- as.character(round(standings$pt_diff, 1))
-prob$pt_seq <- as.character(round(prob$pt_seq, 1))
+# Add rank
+standings <- mutate(standings, off_rank = min_rank(desc(tm_pts)), def_rank = min_rank((op_pts)), pt_diff_rank = min_rank(desc(pt_diff)))
 
-# Join point differential with probability
-s1 <- standings %>% 
-  left_join(prob, by = c("pt_diff" = "pt_seq"))
-
-# Turn prob into percentage format and reformat data frame
-s2 <- select(s1, conf, conf_rank, team, w, l, `w/l%`, tm_pts, op_pts, pt_diff , prob, -pop_mean, -pop_sd, -zscore) %>%
-    arrange(desc(prob))
-
-# Turn probability into percentage format 
-s3 <- mutate(s2, prob_pct = str_c(round(prob*100, 1), "%")) %>% select(-prob)
-
-# Rename columns
-s4 <- rename(s3, 
-            Conf = conf,
-            `Conf Rank` = conf_rank,
-            Team = team,
-            W = w,
-            L = l,
-            PCT = `w/l%`,
-            PPG = tm_pts,
-            oPPG = op_pts,
-            Diff= pt_diff,
-            `Playoff Prob` = prob_pct
-          )
-
-# To JSON file
-standings_playoff_pct <- toJSON(s4, pretty = T)
-
-write(standings_playoff_pct, "nba_playoff_pct.JSON")
-
-ggplot(s2, aes(x = prob, y = as.numeric(pt_diff))) + 
-  geom_point(aes(color = factor(team))) + 
-  geom_hline(aes(yintercept = 0)) +
-  theme_bw()
-
-ggplot(s4, aes(x = rank(PPG), y = rank(oPPG))) + 
-  geom_point(aes(color = factor(Team)), size = 2) +
+ggplot(standings, aes(x = pt_diff, y = conf_rank)) + 
+  geom_point(size = 2) +
   geom_smooth() +
   theme_bw()
+
+# Offense vs Defense Rank
+ggplot(standings, aes(x = off_rank, y = def_rank)) + 
+  geom_point(size = 2) +
+  geom_smooth() +
+  theme_bw()
+
+# Point Difference vs. Winning Percentage Rank
+ggplot(standings, aes(x = pt_diff_rank, y = `w/l%`)) + 
+  geom_point(aes(color = factor(team)), size = 2) +
+  geom_smooth() +
+  theme_bw()
+
+# Offense vs. Winning Percentage Rank
+ggplot(standings, aes(x = off_rank, y = `w/l%`)) + 
+  geom_point(aes(color = factor(team)), size = 2) +
+  geom_smooth() +
+  theme_bw()
+
+# Defense vs. Winning Percentage Rank
+ggplot(standings, aes(x = def_rank, y = `w/l%`)) + 
+  geom_point(aes(color = factor(team)), size = 2) +
+  geom_smooth() +
+  theme_bw()
+

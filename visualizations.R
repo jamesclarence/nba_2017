@@ -23,8 +23,16 @@ filter(df2, pt_diff == pt_seq)
 ggplot(x, aes(x = pt_diff, fill = as.factor(conf_rank))) +
   geom_density(alpha=0.25) + theme_bw()
 
+# density of x by playoff appearance
+ggplot(x, aes(x = pt_diff, fill = as.factor(playoff))) +
+  geom_density(alpha=0.25) + theme_bw()
+
 filter(x, conf_rank == 1|conf_rank == 2|conf_rank == 3) %>% 
   ggplot(aes(x = pt_diff, fill = as.factor(conf_rank))) +
+  geom_density(alpha=0.25) + theme_bw()
+
+filter(x, conf_rank > 8 ) %>% 
+  ggplot(aes(x = pt_diff, fill = as.factor(playoff))) +
   geom_density(alpha=0.25) + theme_bw()
 
 # scatter plot comparing conf_rank and pt_diff
@@ -56,3 +64,7 @@ avg_pt_diff_conf_rank <- x %>% group_by(conf_rank) %>% summarise(count = n(), av
 ## calculate z-score for entire standings
 pop_sd <- sd(x$pt_diff)*sqrt((length(x$pt_diff)-1)/(length(x$pt_diff)))
 pop_mean <- mean(x$pt_diff)
+
+
+ggplot(s4, aes(x = `Playoff Prob`, y = as.numeric(Diff))) + 
+    geom_point(aes(color = factor(Team)))
