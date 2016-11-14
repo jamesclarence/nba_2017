@@ -132,3 +132,44 @@ filter(standings, conf == "West") %>%
 ```
 
 
+Here are the Eastern Conference standings:
+```{r}
+library(formattable)
+
+# formattable(east,
+#             list(
+#                conf_rank = color_tile("white", "orange"))
+#             )
+
+formattable(east,
+            list(
+               team = formatter("span", 
+          style = x ~ style(color = ifelse(east$conf_rank <= 8, "green", "red"))))
+)
+```
+
+```{r}
+
+east$pt_diff <- round(east$pt_diff, 1)
+datatable(data = east, class = 'cell-border stripe', 
+          options = list(pageLength = 15))
+```
+
+
+Using scatterD3
+```{r, echo=FALSE}
+library(scatterD3)
+scatterD3(data = standings, x = conf_rank, y = pt_diff,
+          lines = data.frame(slope = c(0, Inf), 
+                             intercept = c(0,8),
+                             stroke = "#000",
+                             stroke_width = 1,
+                             stroke_dasharray = 5),
+          col_var = team,
+          legend_width = 0,
+          point_size = 200, point_opacity = 0.5,
+          hover_size = 4, hover_opacity = 1,
+          xlim = c(0,16))
+
+```
+
