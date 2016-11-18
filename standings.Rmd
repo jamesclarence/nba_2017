@@ -1,7 +1,6 @@
 ---
 title: "2017 NBA  Team Stats"
 author: "Jay Fisher"
-date: "November 8, 2016"
 output: html_document
 ---
 
@@ -100,66 +99,28 @@ standings <- rbind(east, west) %>% arrange(conf, conf_rank) %>% select(-gb, -srs
 
 # Add rank
 standings <- mutate(standings, off_rank = min_rank(desc(tm_pts)), def_rank = min_rank((op_pts)), pt_diff_rank = min_rank(desc(pt_diff)))
-
 ```
 
-Here are different ways to show what the 2016-17 NBA season looks right now.
+Point differential is one of the better ways to show how good a team actually is. The idea is that a team's victory margin can predict a team's expected success rather than just wins and losses.
 
-First up, the Eastern Conference:
-
-```{r, echo=FALSE}
-filter(standings, conf == "East") %>% 
-  ggplot(aes(x = conf_rank, y = pt_diff)) + 
-  geom_point(aes(color = conf), size = 5, alpha = 0.5) +
-  xlim(1,15) +
-  geom_vline(xintercept = 8) +
-  geom_smooth(method = "lm", se = FALSE) +
-  labs(x = "Conference Rank", y = "Point Differential", title = "Eastern Conference: Point Differential by Conference Rank" ) +
-  theme_bw()
-```
-
-The Western Conference:
-
-```{r, echo=FALSE}
-filter(standings, conf == "West") %>% 
-  ggplot(aes(x = conf_rank, y = pt_diff)) + 
-  geom_point(aes(color = team), size = 5, alpha = 0.5) +
-  xlim(1,15) +
-  geom_vline(xintercept = 8) +
-  geom_smooth(method = "lm", se = FALSE) +
-  labs(x = "Conference Rank", y = "Point Differential", title = "Western Conference: Point Differential by Conference Rank" ) +
-  theme_bw()
-```
-
-
-Here are the Eastern Conference standings:
+Historically, here's how point differential rank and winning percentage are linked together.
+ 
 ```{r}
-library(formattable)
+# Graph of point_differential rank per season compared to win %
 
-# formattable(east,
-#             list(
-#                conf_rank = color_tile("white", "orange"))
-#             )
+# Read in standings csv file
 
-formattable(east,
-            list(
-               team = formatter("span", 
-          style = x ~ style(color = ifelse(east$conf_rank <= 8, "green", "red"))))
-)
 ```
 
-```{r}
+https://en.wikipedia.org/wiki/Pythagorean_expectation
+http://offthedribble.blogs.nytimes.com/2012/04/17/in-the-n-b-a-there-is-a-message-in-point-differentials/
 
-east$pt_diff <- round(east$pt_diff, 1)
-datatable(data = east, class = 'cell-border stripe', 
-          options = list(pageLength = 15))
-```
-
-
-Using scatterD3
-```{r, echo=FALSE}
+# Conference Ranking and Point Differential
+```{r, echo=FALSE, warning=FALSE}
 library(scatterD3)
-scatterD3(data = standings, x = conf_rank, y = pt_diff,
+scatterD3(data = standings, 
+          x = conf_rank, 
+          y = pt_diff,
           lines = data.frame(slope = c(0, Inf), 
                              intercept = c(0,8),
                              stroke = "#000",
@@ -167,9 +128,44 @@ scatterD3(data = standings, x = conf_rank, y = pt_diff,
                              stroke_dasharray = 5),
           col_var = team,
           legend_width = 0,
-          point_size = 200, point_opacity = 0.5,
+          point_size = 400, point_opacity = 0.7,
           hover_size = 4, hover_opacity = 1,
           xlim = c(0,16))
 
+```
+
+```{r}
+library(metricsgraphics)
+
+standings %>%
+  mjs_plot(x = conf_rank, y = pt_diff, width=600, height=500) %>%
+  mjs_point(color_accessor = team)
+
+```
+
+
+# Eastern Conference Standings  
+```{r, echo=FALSE, warning=FALSE}
+library(DT)
+east$pt_diff <- round(east$pt_diff, 1)
+
+select(east, conf_rank, team, w, l, `w/l%`, tm_pts, op_pts, pt_diff) %>%
+  datatable(class = 'cell-border stripe',
+            rownames = F,
+          options = list(pageLength = 15, 
+                         dom = 't')
+          )
+```
+
+# Western Conference Standings
+```{r, echo=FALSE, warning=FALSE}
+library(DT)
+west$pt_diff <- round(east$pt_diff, 1)
+
+select(west, conf_rank, team, w, l, `w/l%`, tm_pts, op_pts, pt_diff) %>%
+  datatable(class = 'cell-border stripe',
+            rownames = F,
+          options = list(pageLength = 15, dom = 't')
+          )
 ```
 
